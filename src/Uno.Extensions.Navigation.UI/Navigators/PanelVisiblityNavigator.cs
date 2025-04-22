@@ -22,11 +22,13 @@ public class PanelVisiblityNavigator : ControlNavigator<Panel>
 			}
 			else
 			{
-				view.Loaded += PanelLoaded;
+				region.View.Loaded += PanelLoaded;
 			}
 		}
 	}
 
+	private void PanelLoaded(object sender, RoutedEventArgs e)
+	{
 	private void PanelLoaded(object sender, RoutedEventArgs e)
 	{
 		if (Control is null)
@@ -36,7 +38,12 @@ public class PanelVisiblityNavigator : ControlNavigator<Panel>
 		Control.Loaded -= PanelLoaded;
 		HandlePanelChildren();
 	}
+		HandlePanelChildren();
+	}
 
+	private void HandlePanelChildren()
+	{
+		var existingRoutes = Control?.Children.OfType<FrameworkElement>().Select(x => x.GetName()).Where(x => x is { Length: > 0 });
 	private void HandlePanelChildren()
 	{
 		var existingRoutes = Control?.Children.OfType<FrameworkElement>().Select(x => x.GetName()).Where(x => x is { Length: > 0 });
@@ -49,6 +56,7 @@ public class PanelVisiblityNavigator : ControlNavigator<Panel>
 		{
 			return false;
 		}
+
 
 		if (routeMap?.RenderView?.IsSubclassOf(typeof(FrameworkElement)) ?? false)
 		{

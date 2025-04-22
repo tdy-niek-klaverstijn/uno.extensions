@@ -31,19 +31,25 @@
 				  utu:AutoLayout.CounterAlignment="Stretch"
 				  utu:AutoLayout.PrimaryAlignment="Stretch">
 				<Grid uen:Region.Name="MyRecipes">
-					<TextBlock HorizontalAlignment="Center"
-							   VerticalAlignment="Center"
-							   Text="All my recipes" />
-					<Button AutomationProperties.AutomationId="RecipeDetailsButton"
-							uen:Navigation.Request="ChefsFavoriteRecipeDetails"
-							Content="Recipe Details" />
+					<StackPanel HorizontalAlignment="Center"
+								VerticalAlignment="Center">
+						<TextBlock Text="All my recipes" />
+						<Button AutomationProperties.AutomationId="RecipeDetailsButton"
+								Command="{Binding NavigateToRecipeDetail}"
+								Content="Recipe Details" />
+					</StackPanel>
+
 				</Grid>
 				<Grid uen:Region.Name="MyCookbooks"
 					  Visibility="Collapsed">
+					<StackPanel HorizontalAlignment="Center"
+								VerticalAlignment="Center">
+						<TextBlock Text="All my cookbooks" />
+						<Button AutomationProperties.AutomationId="CookbookDetailsButton"
+								Command="{Binding NavigateToCookbookDetail}"
+								Content="Cookbook Details" />
+					</StackPanel>
 
-					<TextBlock HorizontalAlignment="Center"
-							   VerticalAlignment="Center"
-							   Text="All my cookbooks" />
 				</Grid>
 			</Grid>
 		</utu:AutoLayout>

@@ -146,7 +146,7 @@ public class Navigator : INavigator, IInstance<IServiceProvider>
 			return dependsNavResponse;
 		}
 
-
+		
 
 		// If the current navigator can handle this route,
 		// then simply return without redirecting the request but
@@ -179,6 +179,13 @@ public class Navigator : INavigator, IInstance<IServiceProvider>
 		else if (rm is not null)
 		{
 			return RedirectForFullRoute(request, rm);
+		}
+
+		// Handle Steve (ie redirect to a parent navigator that can handle the request)
+		if (rm is not null &&
+			await RedirectForSteve(request, rm) is { } steveNavResponse)
+		{
+			return steveNavResponse;
 		}
 
 		return default;
@@ -223,6 +230,49 @@ public class Navigator : INavigator, IInstance<IServiceProvider>
 		return default;
 	}
 
+	private async Task<Task<NavigationResponse?>?> RedirectForSteve(NavigationRequest request, RouteInfo rm)
+	{
+		var ancestors = Region.Ancestors(true);
+		INavigator? redirectNav = default;
+
+		foreach (var navAncestor in ancestors)
+		{
+			if (navAncestor.Navigator is IStackNavigator stackNavigator &&
+				navAncestor.Route is { } route &&
+				Resolver.FindByPath(route.Base) is { } ancestorMap &&
+				ancestorMap.Parent?.AsRoute()?.Base == rm.Parent?.AsRoute()?.Base)
+			{
+				return navAncestor.Navigator!.NavigateAsync(request);
+			}
+
+			if (!(navAncestor.Navigator is null ||
+				// Ignore stack navigators, as they'll
+				// always be able to nav to requests with dependson
+				// by adding dependson to the stack before the request
+				navAncestor.Navigator is IStackNavigator) &&
+				await navAncestor.Navigator.CanNavigate(request.Route))
+			{
+				redirectNav = navAncestor.Navigator;
+			}
+			else if (redirectNav is not null)
+			{
+				if (navAncestor.Navigator?.IsComposite() ?? false)
+				{
+					// navAncestor is a composite region but since
+					// it doesn't support navigating to the depRequest
+					// we just need to reset redirectNav to null and
+					// continue looking for the correct region to navigate
+					redirectNav = null;
+					continue;
+				}
+
+				// Required for test: Given_Apps_Commerce.When_Commerce_Responsive (portrait/narrow layout)
+				return redirectNav.NavigateAsync(depRequest);
+			}
+		}
+
+		return default;
+	}
 	private async Task<Task<NavigationResponse?>?> RedirectForDependsOn(NavigationRequest request, RouteInfo? rm)
 	{
 		if (rm?.DependsOnRoute is { } dependsOnRoute)
